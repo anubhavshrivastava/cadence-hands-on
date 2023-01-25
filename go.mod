@@ -3,6 +3,7 @@ module github.com/anubhavshrivastava/cadence-hands-on
 go 1.19
 
 require (
+	github.com/google/uuid v1.1.2
 	github.com/m3db/prometheus_client_golang v1.12.8
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/uber-go/tally v3.5.2+incompatible

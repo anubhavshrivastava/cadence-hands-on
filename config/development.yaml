@@ -1,5 +1,5 @@
 # config for sample
-domain: "test-domain"
+domain: "demo-domain"
 service: "cadence-frontend"
 host: "127.0.0.1:7833"
 # config for emitting metrics
