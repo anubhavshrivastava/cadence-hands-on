@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/anubhavshrivastava/cadence-hands-on/cmd/samples/common"
+	"github.com/anubhavshrivastava/cadence-hands-on/cmd/samples/ex_1"
+	"github.com/anubhavshrivastava/cadence-hands-on/cmd/samples/ex_2"
 	"github.com/anubhavshrivastava/cadence-hands-on/cmd/samples/hello_world_workflow"
 	"github.com/google/uuid"
 	"go.uber.org/cadence/client"
@@ -16,9 +18,11 @@ var helper common.SampleHelper
 
 func main() {
 
-	var command, workflowName string
-	flag.StringVar(&command, "cmd", "start-workflow", "Command is start-workflow, start-worker, send-signal")
+	var command, workflowName, workflowId, signalInput string
+	flag.StringVar(&command, "cmd", "start-workflow", "Command is start-workflow, start-worker, signal-workflow")
 	flag.StringVar(&workflowName, "wf", "hello-world", "Workflow Name to start")
+	flag.StringVar(&workflowId, "wfId", "", "Workflow Id to Signal")
+	flag.StringVar(&signalInput, "sigData", "", "Signal Data")
 	flag.Parse()
 
 	helper.SetupServiceConfig()
@@ -29,8 +33,14 @@ func main() {
 	case "start-worker":
 		startWorker(workflowName)
 		select {}
+	case "signal-workflow":
+		signalWorkflow(workflowId, signalInput)
+		select {}
 	}
 
+}
+func signalWorkflow(workflowId, signalInput string) {
+	helper.SignalWorkflow(workflowId, "testSignalChannel", signalInput)
 }
 
 func startWorker(workflowName string) {
@@ -47,7 +57,33 @@ func startWorker(workflowName string) {
 			},
 		}
 		helper.StartWorkers(helper.Config.DomainName, "default_task_list", workerOptions)
+	case "ex-1":
+		helper.RegisterWorkflow(ex_1.Workflow)
+		helper.RegisterActivity(ex_1.SayWorld)
+		helper.RegisterActivity(ex_1.SayHello)
+
+		workerOptions := worker.Options{
+			MetricsScope: helper.WorkerMetricScope,
+			Logger:       helper.Logger,
+			FeatureFlags: client.FeatureFlags{
+				WorkflowExecutionAlreadyCompletedErrorEnabled: true,
+			},
+		}
+		helper.StartWorkers(helper.Config.DomainName, "default_task_list", workerOptions)
+	case "ex-2":
+		helper.RegisterWorkflow(ex_2.Workflow)
+		helper.RegisterActivity(ex_2.SayHelloToSignalValue)
+
+		workerOptions := worker.Options{
+			MetricsScope: helper.WorkerMetricScope,
+			Logger:       helper.Logger,
+			FeatureFlags: client.FeatureFlags{
+				WorkflowExecutionAlreadyCompletedErrorEnabled: true,
+			},
+		}
+		helper.StartWorkers(helper.Config.DomainName, "default_task_list", workerOptions)
 	}
+
 }
 
 func startWorkflow(workflowName string, inputs ...interface{}) {
@@ -74,5 +110,18 @@ func startWorkflow(workflowName string, inputs ...interface{}) {
 			helper.StartWorkflow(workflowOptions, hello_world_workflow.WorkflowFunc, inputs...)
 		}
 
+	case "ex-1":
+		{
+			helper.RegisterWorkflow(ex_1.Workflow)
+			helper.RegisterActivity(ex_1.SayHello)
+			helper.RegisterActivity(ex_1.SayWorld)
+			helper.StartWorkflow(workflowOptions, ex_1.Workflow, inputs...)
+		}
+	case "ex-2":
+		{
+			helper.RegisterWorkflow(ex_2.Workflow)
+			helper.RegisterActivity(ex_2.SayHelloToSignalValue)
+			helper.StartWorkflow(workflowOptions, ex_2.Workflow)
+		}
 	}
 }

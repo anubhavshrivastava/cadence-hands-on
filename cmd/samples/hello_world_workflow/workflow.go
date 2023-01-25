@@ -16,7 +16,6 @@ func WorkflowFunc(ctx workflow.Context, name string) error {
 		TaskList:               "default_task_list",
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
-
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Test Workflow  workflow started")
 
